@@ -1,31 +1,69 @@
-:
-
-html
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DonSchem Trading</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DONSHEM - Trade Smarter</title>
 <style>
-body{margin:0;background:#070a13;color:white;font-family:sans-serif;text-align:center}
-.logo{padding:20px;font-size:22px;font-weight:900;color:#00ff88}
-.hero{padding:50px 20px}
-h1{font-size:32px} h1 span{color:#00ff88}
-.btn{display:inline-block;background:#00ff88;color:#000;padding:16px 32px;border-radius:30px;font-weight:800;text-decoration:none;margin-top:20px}
-.box{background:#111827;border:1px solid #222;padding:20px;margin:15px;border-radius:16px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#070a13;color:#fff;padding:15px}
+.logo{color:#00ff88;font-weight:900;font-size:24px;text-align:center;margin:10px 0 20px}
+.hero{text-align:center;padding:20px 0}
+.hero h1{font-size:28px;line-height:1.2}
+.hero span{color:#00ff88}
+.btn{background:#00ff88;color:#000;padding:14px 28px;border-radius:25px;font-weight:800;border:none;cursor:pointer;display:inline-block;text-decoration:none;margin-top:12px}
+.box{background:#111827;border:1px solid #222;padding:20px;border-radius:16px;max-width:400px;margin:20px auto;text-align:center}
+input{width:100%;padding:14px;border-radius:10px;border:1px solid #333;background:#070a13;color:#fff;margin:12px 0}
+#bal{font-size:32px;color:#00ff88;font-weight:900;margin:10px 0}
 </style>
 </head>
 <body>
 <div class="logo">DONSHEM</div>
+<div id="home">
 <div class="hero">
 <h1>Trade Smarter<br><span>with DonSchem</span></h1>
-<p style="opacity:.6">Like TraderSchem - Deriv API, Bots, Analytics</p>
-<a class="btn" href="https://oauth.deriv.com/oauth2/authorize?app_id=1089">Connect Deriv</a>
+<p style="color:#8892a4;margin-top:10px">Like TraderSchem - Deriv API, Bots, Analytics</p>
+<button class="btn" onclick="document.getElementById('conn').style.display='block';window.scrollTo(0,500)">Connect Deriv</button>
 </div>
-<div class="box">⚡ Fast Execution - 0.2s</div>
-<div class="box">🤖 Auto Bots - 24/7</div>
-<div class="box">🔒 Secure - Deriv OAuth</div>
-<p style="opacity:.3;font-size:11px;padding:30px">donschem.vercel.app</p>
+</div>
+<div class="box" id="conn" style="display:none">
+<h3>Connect Your Deriv</h3>
+<input id="token" placeholder="Paste your pat_ token here">
+<button class="btn" style="width:100%" onclick="connectNow()">CONNECT NOW</button>
+<p style="font-size:11px;color:#8892a4;margin-top:10px">Token stored in your phone only</p>
+</div>
+<div class="box" id="done" style="display:none">
+<h3 style="color:#00ff88">✓ CONNECTED</h3>
+<p id="loginId" style="margin:10px 0;color:#8892a4"></p>
+<div id="bal">$0.00</div>
+<p style="margin-top:10px">Dougrous Nyakundi</p>
+<button class="btn" style="background:#1f2937;color:#fff;margin-top:15px;width:100%" onclick="localStorage.clear();location.reload()">Disconnect</button>
+</div>
+<script>
+function connectNow(){
+let t=document.getElementById('token').value.trim();
+if(!t){alert('Weka token!');return}
+localStorage.setItem('deriv_token',t);
+let ws=new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
+ws.onopen=()=>ws.send(JSON.stringify({authorize:t}));
+ws.onmessage=(e)=>{
+let d=JSON.parse(e.data);
+if(d.error){alert('Token error: '+d.error.message);return}
+if(d.authorize){
+document.getElementById('home').style.display='none';
+document.getElementById('conn').style.display='none';
+document.getElementById('done').style.display='block';
+document.getElementById('loginId').innerText='ID: '+d.authorize.loginid;
+ws.send(JSON.stringify({balance:1,subscribe:1}));
+}
+if(d.balance){document.getElementById('bal').innerText='$'+d.balance.balance;}
+}
+ws.onerror=()=>alert('Connection failed');
+}
+window.onload=()=>{
+let s=localStorage.getItem('deriv_token');
+if(s){document.getElementById('token').value=s;}
+}
+</script>
 </body>
-</html>
+  </html>
